@@ -118,6 +118,11 @@ class RestApiClient(object):
         files : dict, optional
             File names and source URLs
 
+        Returns
+        -------
+        str
+            Newly created dataset key
+
         Raises
         ------
         RestApiException
@@ -138,7 +143,10 @@ class RestApiClient(object):
             kwargs)
 
         try:
-            self._datasets_api.create_dataset(owner_id, request)
+            (_, _, headers) = self._datasets_api.create_dataset_with_http_info(
+                owner_id, request, _return_http_data_only=False)
+            if 'Location' in headers:
+                return headers['Location']
         except _swagger.rest.ApiException as e:
             raise RestApiError(cause=e)
 
@@ -496,7 +504,7 @@ class RestApiError(Exception):
         """
         try:
             return json.loads(self.body)
-        except (json.JSONDecodeError, TypeError):
+        except (ValueError, TypeError):
             return None
 
     def __str__(self):

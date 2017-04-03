@@ -61,8 +61,7 @@ class Config(object):
             if self.__migrate_invalid_defaults(self._config_parser) > 0:
                 self.save()
         elif path.isfile(legacy_file_path):
-            self._config_parser = self.__migrate_config(legacy_file_path,
-                                                        self._config_file_path)
+            self._config_parser = self.__migrate_config(legacy_file_path)
             self.save()
 
         self._profile = profile
@@ -105,7 +104,7 @@ class Config(object):
                     self._profile))
 
     @staticmethod
-    def __migrate_config(legacy_file_path, target_file_path):
+    def __migrate_config(legacy_file_path):
         config_parser = configparser.ConfigParser()
 
         with open(legacy_file_path, 'r') as legacy:
@@ -114,7 +113,8 @@ class Config(object):
                 [regex.match(line.strip()).group(1) for line in legacy if
                  regex.match(line)]),
                 None)
-            config_parser[configparser.DEFAULTSECT] = {'auth_token': token}
+            if token is not None:
+                config_parser[configparser.DEFAULTSECT] = {'auth_token': token}
 
         # Will leave legacy in case R SDK may still need it
         # os.remove(legacy_file_path)

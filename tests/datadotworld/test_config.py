@@ -72,6 +72,11 @@ class TestConfig:
         with open(legacy_file_path, 'w') as legacy_file:
             legacy_file.write('token=legacyabcd')
 
+    @pytest.fixture()
+    def unsuitable_legacy_config_file(self, legacy_file_path):
+        with open(legacy_file_path, 'w') as legacy_file:
+            legacy_file.write('fdasfsadfasda\nhlihfas=hilfa\ntoken')
+
     # Tests
 
     @pytest.mark.usefixtures('config_directory', 'default_config_file')
@@ -100,6 +105,12 @@ class TestConfig:
         assert_that(config._config_parser.sections(), has_length(0))
 
     def test_missing_file(self, config_file_path):
+        assert_that(path.isfile(config_file_path), is_(False))
+        config = Config(config_file_path=config_file_path)
+        assert_that(calling(lambda: config.auth_token), raises(RuntimeError))
+
+    @pytest.mark.usefixtures('unsuitable_legacy_config_file')
+    def test_missing_file_unsuitable_legacy_file(self, config_file_path):
         assert_that(path.isfile(config_file_path), is_(False))
         config = Config(config_file_path=config_file_path)
         assert_that(calling(lambda: config.auth_token), raises(RuntimeError))
